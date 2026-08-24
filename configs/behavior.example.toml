@@ -1,0 +1,43 @@
+# Copy to configs/behavior.local.toml and set the local repaired-data path.
+
+[paths]
+force_data_dir = "/path/to/data_sensor_csvfile_repaired"
+
+[behavior]
+subjects = [
+  "qh",
+  "wxl",
+  "zys",
+  "lzy",
+  "xl",
+  "zhb",
+  "phoom",
+  "prae",
+  "maple",
+  "pepper",
+  "ice",
+  "regina",
+  "ljj",
+  "pathe",
+  "pun",
+]
+conditions = ["st_no", "st_tf2"]
+visual_condition = "st_no"
+tactile_condition = "st_tf2"
+trial_indices = [2, 3, 4, 5]
+analysis_start_offset_ms = 10000.0
+lowpass_hz = 5.0
+filter_order = 4
+normalization = "per_target_median"
+standard_deviation_ddof = 1
+file_template = "{subject}_{condition}.csv"
+
+[quality]
+expected_trial_count = 5
+expected_sampling_rate_hz = 500.0
+sampling_rate_tolerance_hz = 0.000001
+compute_sha256 = true
+
+[regression]
+expected_statistics_file = "paper_behavior_expected.json"
+absolute_tolerance = 0.000000000001

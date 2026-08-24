@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "source": "Published behavior results and the frozen repaired-data pipeline",
+  "difference_definition": "st_no minus st_tf2",
+  "absolute_tolerance": 1e-12,
+  "mean_force": {
+    "n_pairs": 15,
+    "statistic": 39.0,
+    "p_value": 0.25238037109375,
+    "effect_size_r_z": -0.3079589415448419
+  },
+  "force_cv": {
+    "n_pairs": 15,
+    "statistic": 0.0,
+    "p_value": 0.00006103515625,
+    "effect_size_r_z": -0.8798826901281197
+  }
+}

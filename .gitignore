@@ -1,0 +1,38 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.venv/
+build/
+dist/
+*.egg-info/
+.ipynb_checkpoints/
+.DS_Store
+
+# Uncurated legacy archive at the repository root. Keep it locally as evidence,
+# but do not stage it until outputs/data have been stripped and provenance is set.
+/*.ipynb
+/*.mat
+/*.csv
+/*.png
+/gc_mats/
+/pdc_static_outputs/
+/var_utils.py
+
+# Machine-specific configuration and secrets
+.env
+configs/local.toml
+configs/behavior.local.toml
+
+# Human-participant data and generated run directories
+data/raw/**
+data/interim/**
+data/processed/**
+results/runs/**
+
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!results/runs/.gitkeep
