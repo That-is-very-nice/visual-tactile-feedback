@@ -1,0 +1,111 @@
+# Copy this file to configs/pdc.local.toml and set the local paths.
+
+[paths]
+eeglab_set_dir = "/path/to/eeglab/set"
+annotation_dir = "/path/to/eeg/annotation"
+# Optional: enables the corrected Figure 8 analysis.
+behavior_subject_summary = "/path/to/behavior_subject_summary.csv"
+
+[neuro]
+subjects = [
+  "qh", "wxl", "zys", "lzy", "xl", "zhb", "phoom", "prae",
+  "maple", "pepper", "ice", "regina", "ljj", "pathe", "pun",
+]
+conditions = ["st_no", "st_tf2"]
+visual_condition = "st_no"
+tactile_condition = "st_tf2"
+epoch_bounds_label = "[0 60]"
+start_annotation = "DC trigger 13"
+stop_annotation = "DC trigger 14"
+expected_epoch_count = 5
+expected_trial_duration_s = 60.0
+trial_duration_tolerance_s = 0.1
+expected_eeg_channel_count = 61
+expected_emg_channel_count = 1
+
+[neuro.subject_condition_event_codes.qh]
+st_no = 1
+st_tf2 = 8
+[neuro.subject_condition_event_codes.wxl]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.zys]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.lzy]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.xl]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.zhb]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.phoom]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.prae]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.maple]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.pepper]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.ice]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.regina]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.ljj]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.pathe]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.pun]
+st_no = 1
+st_tf2 = 9
+
+[pdc]
+trial_indices = [2, 3, 4, 5]
+tmin_s = 10.0
+tmax_s = 60.0
+segment_duration_s = 10.0
+expected_segment_count = 20
+expected_sampling_rate_hz = 1000.0
+target_sampling_rate_hz = 160.0
+eeg_preprocessing = "paper: 1-58 Hz, average reference, bad-channel interpolation, ICA, +/-100 uV, CSD"
+emg_filter_after_alignment = "none"
+emg_rectification = false
+estimator = "bivariate VAR partial directed coherence (SCoT)"
+apply_csd = true
+csd_stiffness = 4.0
+csd_n_legendre_terms = 50
+csd_lambda2 = 0.00001
+model_order_policy = "fixed_explicit"
+model_order = 25
+n_frequency_bins = 801
+frequency_axis = "0_to_nyquist"
+spectral_range_hz = [2.0, 58.0]
+null_threshold_type = "frequency_resolved"
+monte_carlo_iterations = 1000
+monte_carlo_percentile = 95.0
+monte_carlo_random_seed = 0
+summary_metric = "max_normalized_suprathreshold_excess"
+roi_channels = [
+  "CP5", "CP3", "CP1", "CPz",
+  "C5", "C3", "C1", "Cz",
+  "FC5", "FC3", "FC1", "FCz",
+]
+
+[pdc.bands_hz]
+alpha = [8.0, 13.0]
+beta = [13.0, 30.0]
+gamma = [30.0, 58.0]
+
+[pdc_regression]
+expected_statistics_file = "pdc_corrected_expected.json"
+absolute_tolerance = 0.000000000001

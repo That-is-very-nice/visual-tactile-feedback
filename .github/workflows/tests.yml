@@ -32,3 +32,33 @@ jobs:
         run: >-
           python -m unittest discover -s tests -p "test_cmc*.py" -v
           && python -m unittest tests.test_legacy_cmc tests.test_neuro_registry -v
+
+  pdc-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - name: Install PDC dependencies
+        run: python -m pip install ".[pdc]"
+      - name: Test PDC modules
+        run: >-
+          python -m unittest discover -s tests -p "test_pdc*.py" -v
+          && python -m unittest tests.test_legacy_pdc tests.test_neuro_registry -v
+
+  network-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - name: Install brain-network dependencies
+        run: python -m pip install ".[network]"
+      - name: Test brain-network modules
+        run: >-
+          python -m unittest discover -s tests -p "test_brain_network*.py" -v
+          && python -m unittest tests.test_legacy_brain_network tests.test_neuro_registry -v

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "analysis_profile": "corrected_sensor_space_absolute_imcoh",
+  "absolute_tolerance": 1e-12,
+  "declared_holm": {
+    "significant_rows": [
+      {
+        "band": "alpha",
+        "roi_source": "Left_Frontal",
+        "roi_target": "Right_Parietal",
+        "mean_difference": -0.0351366529910851,
+        "p_value_holm": 0.041015625
+      },
+      {
+        "band": "alpha",
+        "roi_source": "Right_Frontal",
+        "roi_target": "Right_Parietal",
+        "mean_difference": -0.0515339756724272,
+        "p_value_holm": 0.01373291015625
+      }
+    ]
+  },
+  "published_style_max_t": {
+    "significant_rows": [
+      {
+        "band": "alpha",
+        "roi_source": "Right_Frontal",
+        "roi_target": "Right_Parietal",
+        "mean_difference": -0.0515339756724272,
+        "p_value_max_t": 0.00799560546875
+      },
+      {
+        "band": "alpha",
+        "roi_source": "Right_Temporal",
+        "roi_target": "Right_Parietal",
+        "mean_difference": -0.0589828088811151,
+        "p_value_max_t": 0.0220947265625
+      },
+      {
+        "band": "theta",
+        "roi_source": "Left_Central",
+        "roi_target": "Left_Temporal",
+        "mean_difference": -0.0238827115368181,
+        "p_value_max_t": 0.0390625
+      }
+    ]
+  }
+}
