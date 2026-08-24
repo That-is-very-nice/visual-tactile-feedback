@@ -26,6 +26,8 @@ dist/
 configs/local.toml
 configs/behavior.local.toml
 configs/cmc.local.toml
+configs/pdc.local.toml
+configs/brain_network.local.toml
 
 # Human-participant data and generated run directories
 data/raw/**

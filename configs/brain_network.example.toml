@@ -1,0 +1,107 @@
+# Copy this file to configs/brain_network.local.toml and set the local paths.
+
+[paths]
+eeglab_set_dir = "/path/to/eeglab/set"
+annotation_dir = "/path/to/eeg/annotation"
+brain_network_legacy_roi_csv = "/path/to/network_imcoh_fb_[10,60]__ROI.csv"
+brain_network_legacy_max_t_csv = "/path/to/coherence_maxT_all_[10,60]_imcoh.csv"
+
+[neuro]
+subjects = [
+  "qh", "wxl", "zys", "lzy", "xl", "zhb", "phoom", "prae",
+  "maple", "pepper", "ice", "regina", "ljj", "pathe", "pun",
+]
+conditions = ["st_no", "st_tf2"]
+visual_condition = "st_no"
+tactile_condition = "st_tf2"
+epoch_bounds_label = "[0 60]"
+expected_epoch_count = 5
+expected_eeg_channel_count = 61
+
+[neuro.subject_condition_event_codes.qh]
+st_no = 1
+st_tf2 = 8
+[neuro.subject_condition_event_codes.wxl]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.zys]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.lzy]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.xl]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.zhb]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.phoom]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.prae]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.maple]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.pepper]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.ice]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.regina]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.ljj]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.pathe]
+st_no = 1
+st_tf2 = 9
+[neuro.subject_condition_event_codes.pun]
+st_no = 1
+st_tf2 = 9
+
+[brain_network]
+trial_indices = [2, 3, 4, 5]
+tmin_s = 10.0
+tmax_s = 60.0
+segment_duration_s = 10.0
+expected_segment_count = 20
+expected_sampling_rate_hz = 1000.0
+eeg_preprocessing = "paper: 1-58 Hz, average reference, bad-channel interpolation, ICA, +/-100 uV, CSD"
+estimator = "multitaper absolute imaginary coherence"
+apply_csd = true
+csd_stiffness = 4.0
+csd_n_legendre_terms = 50
+csd_lambda2 = 0.00001
+multitaper_bandwidth_hz = 2.0
+multitaper_adaptive = true
+summary_metric = "absolute_imaginary_coherence"
+include_within_roi_for_max_t = true
+
+[brain_network.roi_channels]
+Left_Frontal = ["Fp1", "AF3", "AF7", "F1", "F3", "F5", "F7"]
+Right_Frontal = ["Fp2", "AF4", "AF8", "F2", "F4", "F6", "F8"]
+Left_Central = ["FC1", "FC3", "FC5", "C1", "C3", "C5", "CP1", "CP3", "CP5"]
+Right_Central = ["FC2", "FC4", "FC6", "C2", "C4", "C6", "CP2", "CP4", "CP6"]
+Left_Temporal = ["FT7", "T7", "TP7"]
+Right_Temporal = ["FT8", "T8", "TP8"]
+Left_Parietal = ["P1", "P3", "P5", "P7"]
+Right_Parietal = ["P2", "P4", "P6", "P8"]
+Left_Occipital = ["PO3", "PO7", "O1"]
+Right_Occipital = ["PO4", "PO8", "O2"]
+
+[brain_network.bands_hz]
+delta = [2.0, 4.0]
+theta = [4.0, 8.0]
+alpha = [8.0, 13.0]
+beta = [13.0, 30.0]
+gamma = [30.0, 58.0]
+
+[brain_network_regression]
+corrected_expected_statistics_file = "brain_network_corrected_expected.json"
+published_expected_statistics_file = "brain_network_published_legacy_expected.json"
+absolute_tolerance = 0.000000000001

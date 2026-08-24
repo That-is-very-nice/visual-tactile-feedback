@@ -2,7 +2,7 @@
 
 这是用于整理“视觉与振动触觉反馈下等长力控制”研究分析流程的私人仓库。目标是让论文参数、代码逻辑和结果来源长期可追溯，便于后续写作、修改和展示。
 
-当前稳定版本包含行为学与 CMC。PDC 和 EEG 脑网络将在后续版本中逐步加入。原始人体数据、个人路径、历史 Notebook 和生成结果不进入 Git。
+当前稳定分析包含行为学、CMC、PDC 与 EEG 脑网络。原始人体数据、个人路径、历史 Notebook 和生成结果不进入 Git。
 
 ## 已稳定的分析
 
@@ -25,25 +25,60 @@
 
 CMC 有两条明确分开的证据链：默认管线是参数显式的单次重算；论文 Fig. 5/Table 1 只能通过历史 CSV 中两批冲突输出的显式平均复现。详细说明见 [CMC provenance](docs/cmc_provenance.md)。
 
+### PDC
+
+- 与 CMC 共用的 30 套输入 QC、CSD 和 20 个十秒段；
+- 160 Hz 降采样、显式 25 阶双变量 OLS-VAR 和 EEG↔EMG PDC；
+- 1000 次固定种子、频率分辨的 Monte Carlo 阈值；
+- 双方向三频带统计、行为相关、回归检查、Figure 7 和 Figure 8。
+
+PDC 同样分为历史发表链和修正后可重算链。论文 Table 2/Fig. 8 实际使用 PDC5，而方法文字对应 PDC4；旧 Notebook 的阶数和频率轴也存在不可忽略的 provenance 问题。详细说明见 [PDC provenance](docs/pdc_provenance.md)。
+
+### EEG 脑网络
+
+- 30 套 EEG 输入的独立 QC、CSD 和 20 个十秒段；
+- 52 个非中线电极、10 个左右半球脑区、5 个频段的绝对虚部相干；
+- 唯一无向电极对聚合，不再保存历史表中的正反方向重复；
+- 论文文字声明的全局 Wilcoxon+Holm 与历史实际使用的 exact max‑T 两套统计；
+- 数值回归、Figure 9、Figure 10、checkpoint 和运行 manifest。
+
+真实重算得到 8,250 行 subject-level tidy 表。修正后全局 Holm 有 2 条显著连接，published-style exact max‑T 有 3 条；历史论文的 5 条结果可以从归档 max‑T 表精确复现，但不能标成 Holm。详细说明见 [brain-network provenance](docs/brain_network_provenance.md)。
+
 ## 仓库结构
 
 ```text
 configs/
   behavior.example.toml
   cmc.example.toml
+  pdc.example.toml
+  brain_network.example.toml
   paper_behavior_expected.json
   cmc_corrected_expected.json
   cmc_published_expected.json
   cmc_published_legacy_expected.json
+  pdc_corrected_expected.json
+  pdc_published_legacy_expected.json
+  brain_network_corrected_expected.json
+  brain_network_published_legacy_expected.json
 docs/
   behavior_method.md
   cmc_method.md
   cmc_provenance.md
+  pdc_method.md
+  pdc_provenance.md
+  brain_network_method.md
+  brain_network_provenance.md
   data_layout.md
   cmc_data_layout.md
+  pdc_data_layout.md
+  brain_network_data_layout.md
 src/visual_tactile_force/
   behavior*.py
   cmc*.py
+  pdc*.py
+  brain_network*.py
+  legacy_brain_network.py
+  legacy_pdc.py
   neuro_registry.py
   statistics.py
 tests/
@@ -56,9 +91,11 @@ Python 3.10 或更高版本：
 ```bash
 python -m pip install -e .
 python -m pip install -e ".[cmc]"
+python -m pip install -e ".[pdc]"
+python -m pip install -e ".[network]"
 ```
 
-第一行安装行为学依赖；第二行增加 CMC 所需的 MNE 和 mne-connectivity。
+第一行安装基础依赖；其余各行分别增加 CMC、PDC 和脑网络的神经信号读取/计算依赖。
 
 ## 运行行为学
 
@@ -85,10 +122,46 @@ vtf-cmc run \
 
 CMC 输出包括输入 QC、subject 汇总、统计、数值回归、修正后 Figure 5、checkpoint 和运行 manifest。真实数据布局见 [CMC data layout](docs/cmc_data_layout.md)。
 
+## 运行 PDC
+
+```bash
+cp configs/pdc.example.toml configs/pdc.local.toml
+vtf-pdc qc \
+  --config configs/pdc.local.toml \
+  --output-dir results/runs/pdc_qc
+
+vtf-pdc run \
+  --config configs/pdc.local.toml \
+  --output-dir results/runs/pdc_corrected \
+  --resume
+```
+
+PDC 首次运行会生成 Monte Carlo 阈值，之后按设置 hash 缓存。每个 subject-condition 完成后立即写入 checkpoint。真实数据布局见 [PDC data layout](docs/pdc_data_layout.md)。
+
+## 运行 EEG 脑网络
+
+```bash
+cp configs/brain_network.example.toml configs/brain_network.local.toml
+vtf-network qc \
+  --config configs/brain_network.local.toml \
+  --output-dir results/runs/brain_network_qc
+
+vtf-network run \
+  --config configs/brain_network.local.toml \
+  --output-dir results/runs/brain_network_corrected \
+  --resume
+
+vtf-network legacy-regression \
+  --config configs/brain_network.local.toml \
+  --output-dir results/runs/brain_network_legacy
+```
+
+`run` 是可重算主管线；`legacy-regression` 只读取两份指定的历史 CSV，用于验证论文发表的 5 条 max‑T 连接。真实数据布局见 [brain-network data layout](docs/brain_network_data_layout.md)。
+
 ## 测试
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-GitHub Actions 会分别运行基础测试和包含 MNE 的 CMC 测试；测试不使用或上传真实受试数据。
+GitHub Actions 会分别运行基础、CMC、PDC 和脑网络测试；测试不使用或上传真实受试数据。
