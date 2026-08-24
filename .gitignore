@@ -25,6 +25,7 @@ dist/
 .env
 configs/local.toml
 configs/behavior.local.toml
+configs/cmc.local.toml
 
 # Human-participant data and generated run directories
 data/raw/**

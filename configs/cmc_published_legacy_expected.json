@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "historical_published_output_regression_only",
+  "warning": "These values reproduce Fig. 5 and Table 1 only after explicitly averaging two conflicting appended processing runs. They must not be used as the corrected CMC method baseline.",
+  "source": "Archived all_subjects_cmc_zcmc_coh_fb_CSD_[10,60].csv and published Fig. 5/Table 1",
+  "source_file_sha256": "9e5572e0ea0acd57823a884a227e091b2bff096f39d744ca124665417133f8c5",
+  "metric": "cmc5",
+  "metric_definition": "ROI maximum of mean suprathreshold excess",
+  "expected_rows_per_key": 2,
+  "absolute_tolerance": 1e-12,
+  "subjects": [
+    "qh", "wxl", "zys", "lzy", "xl", "zhb", "phoom", "prae",
+    "maple", "pepper", "ice", "regina", "ljj", "pathe", "pun"
+  ],
+  "bands": {
+    "alpha": {
+      "visual_mean": 0.014026316588549732,
+      "tactile_mean": 0.01423835476932087,
+      "statistic": 54.0,
+      "p_value": 0.76153564453125,
+      "effect_size_r_z": -0.08798826901281197,
+      "p_value_holm": 1.0
+    },
+    "beta": {
+      "visual_mean": 0.02882630679405484,
+      "tactile_mean": 0.033683892642000626,
+      "statistic": 45.0,
+      "p_value": 0.42120361328125,
+      "effect_size_r_z": -0.2199706725320299,
+      "p_value_holm": 1.0
+    },
+    "gamma": {
+      "visual_mean": 0.027356258273896285,
+      "tactile_mean": 0.02988458904696474,
+      "statistic": 52.0,
+      "p_value": 0.67877197265625,
+      "effect_size_r_z": -0.11731769201708263,
+      "p_value_holm": 1.0
+    }
+  }
+}

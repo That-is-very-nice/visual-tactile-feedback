@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "status": "published_table_1_reference_only",
+  "source": "Published Table 1",
+  "provenance_status": "Reproduced only by the explicitly labelled historical duplicate-run mean; not the corrected method baseline.",
+  "metric": "max_mean_suprathreshold_excess",
+  "difference_definition": "st_no minus st_tf2",
+  "rounding_note": "The paper reports effect sizes to three decimals.",
+  "bands": {
+    "alpha": {"p_value_holm": 1.0, "effect_size_r_z": -0.088},
+    "beta": {"p_value_holm": 1.0, "effect_size_r_z": -0.220},
+    "gamma": {"p_value_holm": 1.0, "effect_size_r_z": -0.117}
+  }
+}

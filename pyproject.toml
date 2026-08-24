@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "visual-tactile-feedback"
-version = "0.1.0"
+version = "0.2.0"
 description = "Research analysis for visual versus vibrotactile force feedback."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,8 +16,15 @@ dependencies = [
   "tomli>=2; python_version < '3.11'",
 ]
 
+[project.optional-dependencies]
+cmc = [
+  "mne>=1.9,<2",
+  "mne-connectivity>=0.7,<0.8",
+]
+
 [project.scripts]
 vtf-behavior = "visual_tactile_force.behavior_cli:main"
+vtf-cmc = "visual_tactile_force.cmc_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

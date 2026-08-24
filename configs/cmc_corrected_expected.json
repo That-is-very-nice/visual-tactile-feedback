@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "corrected_single_run_method_regression",
+  "source": "Recomputed from all 15 formal subjects with the explicit 10-second paper-method pipeline on 2026-08-24",
+  "metric": "max_mean_suprathreshold_excess",
+  "metric_definition": "ROI maximum of the channel-wise mean positive suprathreshold excess",
+  "difference_definition": "st_no minus st_tf2",
+  "absolute_tolerance": 1e-12,
+  "software_reference": {
+    "mne": "1.10.0",
+    "mne_connectivity": "0.7.0"
+  },
+  "bands": {
+    "alpha": {
+      "subject_count": 15,
+      "visual_mean": 0.0043348571770508,
+      "tactile_mean": 0.0016347558488237818,
+      "n_pairs": 7,
+      "statistic": 11.0,
+      "p_value": 0.6875,
+      "z_statistic": 0.50709255283711,
+      "effect_size_r_z": 0.19166296949998196,
+      "median_difference": -0.004424719063411242,
+      "p_value_holm": 1.0
+    },
+    "beta": {
+      "subject_count": 15,
+      "visual_mean": 0.015343729148831838,
+      "tactile_mean": 0.022542679311069215,
+      "n_pairs": 11,
+      "statistic": 20.0,
+      "p_value": 0.2783203125,
+      "z_statistic": -1.1558409836334063,
+      "effect_size_r_z": -0.3484991690933932,
+      "median_difference": -0.002034157836114159,
+      "p_value_holm": 0.8349609375
+    },
+    "gamma": {
+      "subject_count": 15,
+      "visual_mean": 0.016747944186880578,
+      "tactile_mean": 0.01790505698197118,
+      "n_pairs": 13,
+      "statistic": 43.0,
+      "p_value": 0.892578125,
+      "z_statistic": -0.17471413945365305,
+      "effect_size_r_z": -0.0484569837191317,
+      "median_difference": -0.0011035694848526567,
+      "p_value_holm": 1.0
+    }
+  }
+}
