@@ -39,3 +39,6 @@ results/runs/**
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 !results/runs/.gitkeep
+
+# history file
+.history/
