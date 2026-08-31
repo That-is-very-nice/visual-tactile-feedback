@@ -299,9 +299,12 @@ def _run_regression(
             },
         )
         return
-    expected_name = regression.get(
-        "expected_statistics_file", "pdc_corrected_expected.json"
-    )
+    expected_name = regression.get("expected_statistics_file")
+    if not expected_name:
+        raise ValueError(
+            "pdc_regression.expected_statistics_file is required "
+            "when regression is enabled"
+        )
     expected_path = Path(str(expected_name))
     if not expected_path.is_absolute():
         expected_path = config_path.parent / expected_path

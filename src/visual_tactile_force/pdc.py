@@ -21,9 +21,6 @@ PDC_METRIC_DEFINITIONS = {
     ),
 }
 PAPER_PDC_METRIC_DEFINITION = PDC_METRIC_DEFINITIONS[PAPER_PDC_METRIC]
-PAPER_PDC_METRIC_DEFINITION = (
-    "ROI maximum of channel-wise integrated positive PDC excess, divided by band width"
-)
 PDC_DIRECTIONS = {
     "descending": (1, 0),  # EEG (source 0) -> EMG (target 1)
     "ascending": (0, 1),  # EMG (source 1) -> EEG (target 0)

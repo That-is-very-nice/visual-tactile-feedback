@@ -30,7 +30,7 @@
 - 801 个频点严格对应 0–80 Hz，步长 0.1 Hz；正式汇总使用 2–58 Hz。
 - 用与实际分析相同的 `20 epochs × 2 channels × 1600 samples`、25 阶 VAR 拟合 1000 组独立高斯噪声。
 - 固定 `RandomState(0)`，每个方向、每个频点取第 95 百分位；阈值是频率分辨的数组，不是一个标量。
-- 稳定指标为 `max_normalized_suprathreshold_excess`：对每通道计算 `max(PDC - threshold, 0)` 的带内积分，除以频带宽度，再取 ROI 最大值。
+- 稳定指标为 `max_mean_suprathreshold_excess`（PDC5）：对每个 ROI 通道计算频带内正超阈值 PDC excess 的均值，再取所有 ROI 通道中的最大值。
 - alpha 8–13 Hz，beta 13–30 Hz，gamma 30–58 Hz，边界与历史代码一样为 inclusive。
 
 ## 统计与相关
@@ -42,4 +42,4 @@
 
 ## 真实数据回归
 
-`configs/pdc_corrected_expected.json` 冻结 2026-08-24 的 30 套真实输入聚合结果，不含受试级数据。正式运行必须在 `1e-12` 容差内通过六个 direction × band 的全字段回归。
+现有 `configs/pdc_corrected_expected.json` 保存的是 PDC4 结果，不能作为 PDC5 的回归基准，也不能仅修改其中的指标名称。当前配置使用 `pdc_regression.enabled = false` 暂时跳过真实数据回归。以后使用完整的 30 套数据生成 PDC5 基准后，再重新启用回归检查。
