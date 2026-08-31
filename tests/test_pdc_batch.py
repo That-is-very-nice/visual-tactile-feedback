@@ -4,6 +4,8 @@ import unittest
 
 import pandas as pd
 
+from visual_tactile_force.pdc import PAPER_PDC_METRIC
+
 from visual_tactile_force.pdc_batch import (
     assert_unique_pdc_rows,
     correlate_pdc_with_behavior,
@@ -22,7 +24,7 @@ class PdcBatchTests(unittest.TestCase):
                         "subject": f"s{subject_index}",
                         "condition": condition,
                         "event_code": 1 if condition == "st_no" else 9,
-                        "summary_metric": "max_normalized_suprathreshold_excess",
+                        "summary_metric": PAPER_PDC_METRIC,
                         "pdc_by_direction_band": {
                             direction: {
                                 band: subject_index + shift + band_index

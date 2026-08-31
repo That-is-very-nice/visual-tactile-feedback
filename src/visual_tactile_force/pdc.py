@@ -9,10 +9,18 @@ from scipy import linalg
 from scipy.fftpack import fft
 
 
-PAPER_PDC_METRIC = "max_normalized_suprathreshold_excess"
-PAPER_PDC_METRIC_DEFINITION = (
-    "ROI maximum of channel-wise integrated positive PDC excess, divided by band width"
-)
+PAPER_PDC_METRIC = "max_mean_suprathreshold_excess"
+PDC_METRIC_DEFINITIONS = {
+    "max_normalized_suprathreshold_excess": (
+        "ROI maximum of channel-wise integrated positive PDC excess, "
+        "divided by band width"
+    ),
+    "max_mean_suprathreshold_excess": (
+        "ROI maximum of channel-wise mean positive PDC excess "
+        "above the null threshold"
+    ),
+}
+PAPER_PDC_METRIC_DEFINITION = PDC_METRIC_DEFINITIONS[PAPER_PDC_METRIC]
 PDC_DIRECTIONS = {
     "descending": (1, 0),  # EEG (source 0) -> EMG (target 1)
     "ascending": (0, 1),  # EMG (source 1) -> EEG (target 0)

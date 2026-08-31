@@ -28,7 +28,7 @@ from .neuro_registry import (
 )
 from .pdc import (
     PAPER_PDC_METRIC,
-    PAPER_PDC_METRIC_DEFINITION,
+    PDC_METRIC_DEFINITIONS,
     PDC_DIRECTIONS,
     monte_carlo_pdc_thresholds,
     pdc_frequency_axis,
@@ -70,8 +70,15 @@ def _validate_pdc_config(pdc: Mapping[str, object]) -> None:
     if not bool(pdc.get("apply_csd")):
         raise ValueError("PDC paper method requires current-source density")
     metric = str(pdc.get("summary_metric", PAPER_PDC_METRIC))
-    if metric != PAPER_PDC_METRIC:
-        raise ValueError(f"Stable PDC summary metric must be {PAPER_PDC_METRIC!r}")
+    supported_metrics = {
+        "max_normalized_suprathreshold_excess",  # PDC4
+        "max_mean_suprathreshold_excess",        # PDC5
+    }
+    if metric not in supported_metrics:
+        raise ValueError(
+            f"Unsupported PDC summary metric {metric!r}; "
+            f"expected one of {sorted(supported_metrics)}"
+        )
 
     trial_indices = list(pdc["trial_indices"])
     duration = float(pdc["tmax_s"]) - float(pdc["tmin_s"])
@@ -282,9 +289,22 @@ def _run_regression(
     regression = config.get("pdc_regression", {})
     if not isinstance(regression, Mapping):
         raise ValueError("pdc_regression must be a mapping")
-    expected_name = regression.get(
-        "expected_statistics_file", "pdc_corrected_expected.json"
-    )
+    if not bool(regression.get("enabled", True)):
+        _write_json(
+            output_dir / "pdc_method_regression.json",
+            {
+                "status": "skipped",
+                "reason": "pdc_regression.enabled=false",
+                "failures": [],
+            },
+        )
+        return
+    expected_name = regression.get("expected_statistics_file")
+    if not expected_name:
+        raise ValueError(
+            "pdc_regression.expected_statistics_file is required "
+            "when regression is enabled"
+        )
     expected_path = Path(str(expected_name))
     if not expected_path.is_absolute():
         expected_path = config_path.parent / expected_path
@@ -375,7 +395,7 @@ def run_pdc(
             "schema_version": 1,
             "analysis_status": "corrected_explicit_fixed_order_method",
             "metric": metric,
-            "metric_definition": PAPER_PDC_METRIC_DEFINITION,
+            "metric_definition": PDC_METRIC_DEFINITIONS[metric],
             "difference_definition": f"{visual} minus {tactile}",
             "statistics": statistics,
         },
