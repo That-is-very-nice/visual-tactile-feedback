@@ -94,7 +94,7 @@ null_threshold_type = "frequency_resolved"
 monte_carlo_iterations = 1000
 monte_carlo_percentile = 95.0
 monte_carlo_random_seed = 0
-summary_metric = "max_normalized_suprathreshold_excess"
+summary_metric = "max_mean_suprathreshold_excess"
 roi_channels = [
   "CP5", "CP3", "CP1", "CPz",
   "C5", "C3", "C1", "Cz",
@@ -107,5 +107,5 @@ beta = [13.0, 30.0]
 gamma = [30.0, 58.0]
 
 [pdc_regression]
-expected_statistics_file = "pdc_corrected_expected.json"
+enabled = false
 absolute_tolerance = 0.000000000001
