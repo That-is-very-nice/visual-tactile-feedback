@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import unittest
 
-import numpy as np
 import pandas as pd
 
 from visual_tactile_force.brain_network import PAPER_BANDS_HZ, PAPER_ROI_CHANNELS
 from visual_tactile_force.brain_network_batch import (
     assert_unique_brain_network_rows,
-    exact_studentized_max_t,
-    summarize_declared_holm,
-    summarize_published_style_max_t,
+    collapse_directed_brain_network_rows,
+    summarize_brain_network_wilcoxon_holm,
 )
 
 
@@ -40,30 +38,28 @@ class BrainNetworkBatchTests(unittest.TestCase):
                             )
         return pd.DataFrame(rows)
 
-    def test_declared_holm_has_one_global_225_test_family(self) -> None:
-        rows = summarize_declared_holm(
+    def test_each_band_has_100_directed_tests(self) -> None:
+        rows = summarize_brain_network_wilcoxon_holm(
             self._frame(), visual_condition="st_no", tactile_condition="st_tf2"
         )
-        self.assertEqual(len(rows), 225)
-        self.assertTrue(all(row["correction_family_size"] == 225 for row in rows))
+        self.assertEqual(len(rows), 500)
+        self.assertTrue(all(row["correction_family_size"] == 100 for row in rows))
+        self.assertTrue(all("p_value_holm" in row for row in rows))
 
-    def test_published_style_max_t_uses_55_tests_per_band(self) -> None:
-        rows = summarize_published_style_max_t(
+    def test_directed_rows_collapse_to_55_pairs_per_band(self) -> None:
+        rows = summarize_brain_network_wilcoxon_holm(
             self._frame(), visual_condition="st_no", tactile_condition="st_tf2"
         )
-        self.assertEqual(len(rows), 275)
-        self.assertTrue(all(row["correction_family_size"] == 55 for row in rows))
-        self.assertTrue(all(row["permutation_count"] == 64 for row in rows))
-
-    def test_exact_sign_flip_is_deterministic_and_bounded(self) -> None:
-        differences = np.array(
-            [[1.0, -0.2], [1.1, 0.1], [0.9, -0.1], [1.2, 0.2], [0.8, -0.2]]
+        collapsed = collapse_directed_brain_network_rows(rows)
+        self.assertEqual(len(collapsed), 275)
+        self.assertEqual(
+            sum(row["edge_scope"] == "interregional" for row in collapsed),
+            225,
         )
-        first = exact_studentized_max_t(differences)
-        second = exact_studentized_max_t(differences)
-        np.testing.assert_array_equal(first[0], second[0])
-        np.testing.assert_array_equal(first[1], second[1])
-        self.assertTrue(np.all((first[1] >= 0) & (first[1] <= 1)))
+        self.assertEqual(
+            sum(row["edge_scope"] == "within_roi" for row in collapsed),
+            50,
+        )
 
     def test_duplicate_subject_edge_is_rejected(self) -> None:
         frame = self._frame()

@@ -29,11 +29,12 @@
 
 ### EEG 脑网络
 
-- 30 套 EEG 输入的独立 QC、CSD 和 20 个十秒段；
-- 52 个非中线电极、10 个左右半球脑区、5 个频段的绝对虚部相干；
-- 唯一无向电极对聚合，不再保存历史表中的正反方向重复；
-- 论文文字声明的全局 Wilcoxon+Holm 与历史实际使用的 exact max‑T 两套统计；
-- 数值回归。
+- 30 套 EEG 输入的质量检查、CSD 和稳态分段；
+- 52 个非中线电极，划分为 10 个左右半球 ROI；
+- 计算 delta、theta、alpha、beta 和 gamma 五个频带的绝对虚部相干；
+- 对每个频带的 100 个有序 ROI 组合进行双侧配对 Wilcoxon 符号秩检验；
+- 在每个频带内采用 Holm step-down 方法控制家族错误率；
+- 合并正反方向重复后，输出独立脑区间显著连接及 Figure 9 和 Figure 10。
 
 ## 仓库结构
 
@@ -49,8 +50,7 @@ configs/
   cmc_published_legacy_expected.json
   pdc_corrected_expected.json
   pdc_published_legacy_expected.json
-  brain_network_corrected_expected.json
-  brain_network_published_legacy_expected.json
+  brain_network_expected.json
 docs/
   behavior_method.md
   cmc_method.md
@@ -58,7 +58,7 @@ docs/
   pdc_method.md
   pdc_provenance.md
   brain_network_method.md
-  brain_network_provenance.md
+  brain_network_results.md
   data_layout.md
   cmc_data_layout.md
   pdc_data_layout.md
@@ -68,7 +68,6 @@ src/visual_tactile_force/
   cmc*.py
   pdc*.py
   brain_network*.py
-  legacy_brain_network.py
   legacy_pdc.py
   neuro_registry.py
   statistics.py
@@ -135,12 +134,12 @@ vtf-network qc \
 
 vtf-network run \
   --config configs/brain_network.local.toml \
-  --output-dir results/runs/brain_network_corrected \
+  --output-dir results/runs/brain_network \
   --resume
 
-vtf-network legacy-regression \
+vtf-network verify \
   --config configs/brain_network.local.toml \
-  --output-dir results/runs/brain_network_legacy
+  --output-dir results/runs/brain_network_verification
 ```
 
 ## 测试
@@ -148,4 +147,3 @@ vtf-network legacy-regression \
 ```bash
 python -m unittest discover -s tests -v
 ```
-

@@ -14,6 +14,8 @@ class BrainNetworkCliTests(unittest.TestCase):
     def test_example_configuration_passes(self) -> None:
         config = _read_config(Path("configs/brain_network.example.toml"))
         _validate_network_config(config["brain_network"])
+        self.assertTrue(config["brain_network"]["include_within_roi"])
+        self.assertEqual(config["brain_network"]["statistics"]["family_size"], 100)
 
     def test_midline_channel_cannot_be_added_to_frozen_map(self) -> None:
         config = _read_config(Path("configs/brain_network.example.toml"))
@@ -34,6 +36,18 @@ class BrainNetworkCliTests(unittest.TestCase):
         )
         self.assertEqual(arguments.command, "run")
         self.assertTrue(arguments.resume)
+
+    def test_verify_parser_is_available(self) -> None:
+        arguments = build_parser().parse_args(
+            [
+                "verify",
+                "--config",
+                "configs/brain_network.example.toml",
+                "--output-dir",
+                "output",
+            ]
+        )
+        self.assertEqual(arguments.command, "verify")
 
 
 if __name__ == "__main__":

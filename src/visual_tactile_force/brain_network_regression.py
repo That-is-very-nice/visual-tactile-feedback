@@ -1,4 +1,4 @@
-"""Regression checks for corrected and published brain-network results."""
+"""Regression checks for the fixed brain-network result."""
 
 from __future__ import annotations
 
@@ -12,11 +12,41 @@ def compare_brain_network_significant_rows(
     p_column: str,
     absolute_tolerance: float,
 ) -> dict[str, object]:
-    """Compare the complete corrected-significant edge set and its frozen values."""
+    """Compare the canonical significant edge set and its frozen values."""
 
     expected_rows = expected.get("significant_rows")
     if not isinstance(expected_rows, Sequence):
         raise ValueError("Brain-network baseline must contain significant_rows")
+    expected_profile = str(expected.get("analysis_profile", ""))
+    profiles = {str(row.get("analysis_profile", "")) for row in actual}
+    failures: list[str] = []
+    if profiles != {expected_profile}:
+        failures.append(
+            f"analysis profile differs: actual={sorted(profiles)}, expected={expected_profile!r}"
+        )
+    expected_canonical_count = expected.get("expected_canonical_row_count")
+    if expected_canonical_count is not None and len(actual) != int(expected_canonical_count):
+        failures.append(
+            "canonical row count differs: "
+            f"actual={len(actual)}, expected={int(expected_canonical_count)}"
+        )
+    actual_within_significant = sum(
+        1
+        for row in actual
+        if str(row.get("edge_scope")) == "within_roi" and float(row[p_column]) < 0.05
+    )
+    expected_within_value = expected.get("expected_significant_within_roi_count")
+    expected_within_significant = (
+        int(expected_within_value) if expected_within_value is not None else None
+    )
+    if (
+        expected_within_significant is not None
+        and actual_within_significant != expected_within_significant
+    ):
+        failures.append(
+            "significant within-ROI count differs: "
+            f"actual={actual_within_significant}, expected={expected_within_significant}"
+        )
     actual_rows = [
         row
         for row in actual
@@ -28,7 +58,6 @@ def compare_brain_network_significant_rows(
         tuple(str(row[field]) for field in key_fields): row for row in expected_rows
         if isinstance(row, Mapping)
     }
-    failures: list[str] = []
     if set(actual_by_key) != set(expected_by_key):
         failures.append(
             f"significant edge set differs: actual={sorted(actual_by_key)}, "
@@ -53,5 +82,7 @@ def compare_brain_network_significant_rows(
         "absolute_tolerance": absolute_tolerance,
         "actual_significant_count": len(actual_rows),
         "expected_significant_count": len(expected_by_key),
+        "actual_significant_within_roi_count": actual_within_significant,
+        "expected_significant_within_roi_count": expected_within_significant,
         "failures": failures,
     }

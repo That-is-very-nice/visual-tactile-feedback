@@ -3,8 +3,7 @@
 [paths]
 eeglab_set_dir = "/path/to/eeglab/set"
 annotation_dir = "/path/to/eeg/annotation"
-brain_network_legacy_roi_csv = "/path/to/network_imcoh_fb_[10,60]__ROI.csv"
-brain_network_legacy_max_t_csv = "/path/to/coherence_maxT_all_[10,60]_imcoh.csv"
+brain_network_statistics_csv = "/path/to/coherence_maxT_all_[10,60]_imcoh.csv"
 
 [neuro]
 subjects = [
@@ -80,7 +79,7 @@ csd_lambda2 = 0.00001
 multitaper_bandwidth_hz = 2.0
 multitaper_adaptive = true
 summary_metric = "absolute_imaginary_coherence"
-include_within_roi_for_max_t = true
+include_within_roi = true
 
 [brain_network.roi_channels]
 Left_Frontal = ["Fp1", "AF3", "AF7", "F1", "F3", "F5", "F7"]
@@ -101,7 +100,19 @@ alpha = [8.0, 13.0]
 beta = [13.0, 30.0]
 gamma = [30.0, 58.0]
 
+[brain_network.statistics]
+test = "wilcoxon"
+alternative = "two-sided"
+zero_method = "pratt"
+continuity_correction = true
+method = "auto"
+correction = "holm"
+correction_scope = "per_band"
+directed_roi_pairs = true
+include_within_roi = true
+family_size = 100
+alpha = 0.05
+
 [brain_network_regression]
-corrected_expected_statistics_file = "brain_network_corrected_expected.json"
-published_expected_statistics_file = "brain_network_published_legacy_expected.json"
+expected_statistics_file = "brain_network_expected.json"
 absolute_tolerance = 0.000000000001

@@ -1,18 +1,18 @@
 # EEG brain-network method contract
 
-本文档冻结传感器空间脑网络主管线。它用于可重算分析；论文原始数值由独立的历史适配器验证。
+本文档冻结论文 EEG 脑网络的计算和统计方法。
 
 ## 分析单位与分段
 
-- 15 名受试，visual = `st_no`，tactile = `st_tf2`。
-- `qh` 的 tactile event code 为 8，其余为 9；visual 均为 1。
-- 输入 `.set/.fdt` 已完成 1–58 Hz、平均参考、坏道插值、ICA 和 ±100 µV rejection；读取后重新应用 CSD。
-- 排除 trial 1；trial 2–5 取 10–60 s，每个 trial 切为 5 个不重叠的 10 s segment，共 20 段。
-- 实际输入为 61 个 EEG 通道、5 epochs、60,000 samples/epoch、1000 Hz。论文正文写“64 channels”，与归档数据不一致。
+- 15 名受试者；visual 条件为 `st_no`，tactile 条件为 `st_tf2`。
+- `qh` 的 tactile event code 为 8，其余受试者为 9；visual event code 均为 1。
+- 输入 `.set/.fdt` 已完成 1–58 Hz 滤波、平均参考、坏道插值、ICA 和 ±100 µV 伪迹排除；读取后应用 CSD。
+- 排除 trial 1。trial 2–5 取 10–60 s，每个 trial 切为 5 个不重叠的 10 s segment，共 20 个 segment。
+- 输入数据为 61 个 EEG 通道、5 个 epochs、每个 epoch 60,000 个采样点，采样率为 1000 Hz。
 
 ## ROI
 
-稳定 ROI 映射覆盖 52 个非中线通道：
+10 个 ROI 覆盖 52 个非中线通道：
 
 | ROI | Channels |
 |---|---|
@@ -27,30 +27,31 @@
 | Left_Occipital | PO3, PO7, O1 |
 | Right_Occipital | PO4, PO8, O2 |
 
-`Fpz, AFz, Fz, FCz, Cz, CPz, Pz, POz, Oz` 不进入 10 个 ROI。旧 Notebook 曾存在把 CP 通道归入 parietal 的另一版映射；稳定管线禁止运行时静默替换映射。
+`Fpz, AFz, Fz, FCz, Cz, CPz, Pz, POz, Oz` 不进入 ROI 分析。
 
 ## 连接估计与聚合
 
-- 使用 `mne-connectivity` multitaper `imcoh`，bandwidth = 2 Hz，adaptive weighting 开启。
-- 每个频带先平均 signed ImCoh，再取绝对值，得到 band-averaged `|ImCoh|`，消除有向符号解释；这是历史 channel CSV 和 max‑T 链实际使用的顺序。
-- 频段为 delta 2–4、theta 4–8、alpha 8–13、beta 13–30、gamma 30–58 Hz；共享边界按历史代码的 inclusive 规则进入相邻两带。
-- 只计算唯一无向电极对。52 个通道共有 1326 对，其中 1188 对跨 ROI、138 对位于 ROI 内。
-- 每个 ROI pair 的值为其全部电极对 `|ImCoh|` 的等权平均。正式脑区间表每个 subject-condition 为 `45 pairs × 5 bands`；区内 10 对只为历史 max‑T correction family 保留。
+- 使用 `mne-connectivity` 的 multitaper `imcoh`，bandwidth 为 2 Hz，启用 adaptive weighting。
+- 对每条电极连接先在频带内平均 imaginary coherence，再取绝对值，得到 band-averaged `|ImCoh|`。
+- 频段为 delta 2–4 Hz、theta 4–8 Hz、alpha 8–13 Hz、beta 13–30 Hz 和 gamma 30–58 Hz；频带边界按闭区间处理。
+- ROI 连接值为相应全部电极对 `|ImCoh|` 的算术平均。
+- 每个 subject-condition-band 生成 55 个唯一 ROI 连接：45 个脑区间连接和 10 个脑区内部连接。
 
-## 两套统计口径
+## 统计分析
 
-差值均定义为 `st_no - st_tf2`。
+视觉与触觉的差值定义为 `st_no − st_tf2`。
 
-1. `declared_wilcoxon_holm_global_225`：对 45 个跨区连接 × 5 个频段分别做双侧配对 Wilcoxon，再对全部 225 项做一次 Holm step-down。这对应论文方法文字。
-2. `published_style_exact_max_t_per_band_55`：每个频段用 45 个跨区 + 10 个区内连接构成 family，对 15 人执行全部 `2^15 = 32768` 种同步符号翻转，使用 studentized mean difference 的双侧 max‑T。这对应历史实际统计代码的结构。
+每个频带包含 10 × 10 = 100 个有序 ROI 组合，其中包括 90 个脑区间组合和 10 个脑区内部组合。对每个组合的 15 名受试者条件差值进行双侧配对 Wilcoxon 符号秩检验，参数固定为：
 
-效应方向始终由 visual − tactile 的均值差解释。两套结果必须分文件保存，不允许把 max‑T p 值标成 Holm p 值。
+- `zero_method="pratt"`
+- `correction=True`
+- `alternative="two-sided"`
+- `method="auto"`（旧版 SciPy 中对应 `mode="auto"`）
 
-## 修正后真实数据回归
+随后在每个频带的 100 个原始 p 值内执行 Holm step-down 校正，显著性阈值为 0.05。不同频带分别构成不同的多重比较家族。
 
-2026-08-24 的 30 套真实输入结果冻结在 `configs/brain_network_corrected_expected.json`，不包含受试级数据。
+Holm 校正完成后再合并数值相同的正反方向连接，得到每个频带 55 个唯一 ROI 连接。论文结果只报告 45 个脑区间连接，不报告 10 个 ROI 内部连接。
 
-- declared global Holm：2 条显著连接，均在 alpha（Left_Frontal–Right_Parietal；Right_Frontal–Right_Parietal）。
-- published-style exact max‑T：3 条显著连接（alpha 的 Right_Frontal–Right_Parietal、Right_Temporal–Right_Parietal；theta 的 Left_Central–Left_Temporal）。
+## 固定结果
 
-正式运行必须在 `1e-12` 容差内复现完整显著边集合及其均值差和校正 p 值。
+最终方法得到 11 条有向显著记录：5 对脑区间连接各出现两个方向，另有 1 条 ROI 内部连接。合并方向并排除 ROI 内部连接后，论文报告 5 条连接。具体数值见 `docs/brain_network_results.md`，机器可读基线见 `configs/brain_network_expected.json`。

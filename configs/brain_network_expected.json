@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "analysis_profile": "wilcoxon_holm_per_band_directed_100",
+  "test": "paired_two_sided_wilcoxon_signed_rank",
+  "zero_method": "pratt",
+  "continuity_correction": true,
+  "correction": "holm_step_down",
+  "correction_scope": "per_frequency_band",
+  "correction_family_size": 100,
+  "expected_directed_row_count": 500,
+  "expected_canonical_row_count": 275,
+  "expected_significant_directed_count": 11,
+  "expected_significant_interregional_count": 5,
+  "expected_significant_within_roi_count": 1,
+  "absolute_tolerance": 1e-12,
+  "significant_rows": [
+    {
+      "band": "alpha",
+      "roi_source": "Left_Frontal",
+      "roi_target": "Right_Parietal",
+      "mean_difference": -0.0351425917260898,
+      "p_value_holm": 0.0179443359375
+    },
+    {
+      "band": "alpha",
+      "roi_source": "Right_Frontal",
+      "roi_target": "Right_Parietal",
+      "mean_difference": -0.0515724921936051,
+      "p_value_holm": 0.006103515625
+    },
+    {
+      "band": "alpha",
+      "roi_source": "Right_Temporal",
+      "roi_target": "Right_Parietal",
+      "mean_difference": -0.0588822872306646,
+      "p_value_holm": 0.029296875
+    },
+    {
+      "band": "theta",
+      "roi_source": "Left_Frontal",
+      "roi_target": "Left_Central",
+      "mean_difference": -0.0217080167281374,
+      "p_value_holm": 0.030517578125
+    },
+    {
+      "band": "theta",
+      "roi_source": "Left_Central",
+      "roi_target": "Left_Temporal",
+      "mean_difference": -0.0238093568020543,
+      "p_value_holm": 0.04144287109375
+    }
+  ]
+}
