@@ -6,10 +6,10 @@ from typing import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
-from scipy.stats import ttest_rel
+from scipy.stats import wilcoxon
 
-from .brain_network import PAPER_NETWORK_METRIC
-from .statistics import holm_adjust, paired_wilcoxon_signed_rank
+from .brain_network import PAPER_NETWORK_METRIC, PAPER_ROI_CHANNELS
+from .statistics import holm_adjust
 
 
 NETWORK_KEY_COLUMNS = (
@@ -91,165 +91,184 @@ def _paired_edge(
     return paired
 
 
-def summarize_declared_holm(
+def _brain_network_wilcoxon(differences: np.ndarray) -> tuple[float, float]:
+    """Run the final paired Wilcoxon convention for one ROI connection."""
+
+    values = np.asarray(differences, dtype=float).reshape(-1)
+    values = values[np.isfinite(values)]
+
+    if values.size == 0 or np.all(values == 0):
+        return 0.0, 1.0
+
+    result = wilcoxon(
+        values,
+        zero_method="pratt",
+        correction=True,
+        alternative="two-sided",
+        method="auto",
+    )
+    return float(result.statistic), float(result.pvalue)
+
+
+def summarize_brain_network_wilcoxon_holm(
     frame: pd.DataFrame,
     *,
     visual_condition: str,
     tactile_condition: str,
 ) -> list[dict[str, object]]:
-    """Apply paired Wilcoxon tests and one Holm family across 45 edges × 5 bands."""
+    """Run per-band Wilcoxon tests and Holm correction over 100 directed ROI rows."""
 
     assert_unique_brain_network_rows(frame)
-    interregional = frame[frame["edge_scope"] == "interregional"]
-    rows: list[dict[str, object]] = []
-    for (band, roi_source, roi_target), subset in interregional.groupby(
-        ["band", "roi_source", "roi_target"], sort=True
-    ):
-        paired = _paired_edge(
-            subset,
-            visual_condition=visual_condition,
-            tactile_condition=tactile_condition,
-        )
-        result = paired_wilcoxon_signed_rank(
-            paired[visual_condition].to_numpy(),
-            paired[tactile_condition].to_numpy(),
-        )
-        rows.append(
-            {
-                "analysis_profile": "declared_wilcoxon_holm_global_225",
-                "band": band,
-                "roi_source": roi_source,
-                "roi_target": roi_target,
-                "edge_scope": "interregional",
-                "subject_count": int(len(paired)),
-                "visual_mean": float(paired[visual_condition].mean()),
-                "tactile_mean": float(paired[tactile_condition].mean()),
-                "mean_difference": float(
-                    (paired[visual_condition] - paired[tactile_condition]).mean()
-                ),
-                **result.to_dict(),
-            }
-        )
-    adjusted = holm_adjust(np.array([row["p_value"] for row in rows], dtype=float))
-    for row, adjusted_p in zip(rows, adjusted):
-        row["p_value_holm"] = float(adjusted_p)
-        row["significant"] = bool(adjusted_p < 0.05)
-        row["correction_family_size"] = len(rows)
-    return rows
 
+    all_rows: list[dict[str, object]] = []
 
-def exact_studentized_max_t(differences: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Return observed paired t statistics and exhaustive sign-flip max-T p-values."""
-
-    values = np.asarray(differences, dtype=float)
-    if values.ndim != 2 or values.shape[0] < 2 or values.shape[1] < 1:
-        raise ValueError("differences must have shape (subjects >= 2, tests >= 1)")
-    if not np.all(np.isfinite(values)):
-        raise ValueError("differences must be finite")
-    subject_count = values.shape[0]
-    if subject_count > 20:
-        raise ValueError("Exhaustive sign flipping is limited to 20 subjects")
-
-    def studentized(means: np.ndarray) -> np.ndarray:
-        sums_of_squares = np.sum(values**2, axis=0)
-        variance = (sums_of_squares[None, :] - subject_count * means**2) / (
-            subject_count - 1
-        )
-        variance = np.maximum(variance, 0.0)
-        standard_error = np.sqrt(variance / subject_count)
-        result = np.zeros_like(means)
-        nonzero_error = standard_error > 0
-        np.divide(means, standard_error, out=result, where=nonzero_error)
-        degenerate = (~nonzero_error) & (means != 0)
-        result[degenerate] = np.copysign(np.inf, means[degenerate])
-        return result
-
-    observed = studentized(values.mean(axis=0, keepdims=True))[0]
-    permutation_count = 1 << subject_count
-    codes = np.arange(permutation_count, dtype=np.uint64)[:, None]
-    bit_positions = np.arange(subject_count, dtype=np.uint64)[None, :]
-    bits = ((codes >> bit_positions) & 1).astype(np.int8)
-    signs = (bits * 2 - 1).astype(float)
-    permuted_means = (signs @ values) / subject_count
-    permuted_t = studentized(permuted_means)
-    null_max = np.max(np.abs(permuted_t), axis=1)
-    p_values = np.mean(null_max[:, None] >= np.abs(observed)[None, :], axis=0)
-    return observed, p_values
-
-
-def summarize_published_style_max_t(
-    frame: pd.DataFrame,
-    *,
-    visual_condition: str,
-    tactile_condition: str,
-) -> list[dict[str, object]]:
-    """Reconstruct the actual per-band max-T family used by the historical notebook.
-
-    The correction family contains 45 interregional and 10 within-ROI tests.
-    Directional duplicates from the old CSV are omitted because they have the
-    same absolute statistic and therefore cannot change the maximum.
-    """
-
-    assert_unique_brain_network_rows(frame)
-    rows: list[dict[str, object]] = []
     for band, band_frame in frame.groupby("band", sort=True):
-        difference_columns: list[np.ndarray] = []
-        metadata: list[tuple[str, str, str, pd.DataFrame]] = []
-        subjects: list[str] | None = None
+        directed_rows: list[dict[str, object]] = []
+        common_subjects: list[str] | None = None
+
         for (roi_source, roi_target, edge_scope), subset in band_frame.groupby(
-            ["roi_source", "roi_target", "edge_scope"], sort=True
+            ["roi_source", "roi_target", "edge_scope"],
+            sort=True,
         ):
             paired = _paired_edge(
                 subset,
                 visual_condition=visual_condition,
                 tactile_condition=tactile_condition,
             ).sort_index()
+
             current_subjects = paired.index.astype(str).tolist()
-            if subjects is None:
-                subjects = current_subjects
-            elif current_subjects != subjects:
-                raise ValueError(f"max-T subject set differs for {band}/{roi_source}/{roi_target}")
-            difference_columns.append(
-                paired[visual_condition].to_numpy() - paired[tactile_condition].to_numpy()
-            )
-            metadata.append((roi_source, roi_target, edge_scope, paired))
-        matrix = np.stack(difference_columns, axis=1)
-        observed, p_values = exact_studentized_max_t(matrix)
-        for (roi_source, roi_target, edge_scope, paired), t_value, p_value in zip(
-            metadata, observed, p_values
-        ):
+            if common_subjects is None:
+                common_subjects = current_subjects
+            elif current_subjects != common_subjects:
+                raise ValueError(
+                    f"Subject set differs for {band}/{roi_source}/{roi_target}"
+                )
+
             differences = (
                 paired[visual_condition].to_numpy()
                 - paired[tactile_condition].to_numpy()
             )
-            if np.allclose(differences, differences[0], rtol=0.0, atol=1e-15):
-                raw_p_value = 1.0 if np.mean(differences) == 0 else 0.0
-            else:
-                raw_p_value = float(
-                    ttest_rel(
-                        paired[visual_condition].to_numpy(),
-                        paired[tactile_condition].to_numpy(),
-                    ).pvalue
-                )
-            rows.append(
+            statistic, p_value_raw = _brain_network_wilcoxon(differences)
+
+            base = {
+                "analysis_profile": "wilcoxon_holm_per_band_directed_100",
+                "band": str(band),
+                "edge_scope": str(edge_scope),
+                "subject_count": int(len(paired)),
+                "visual_mean": float(paired[visual_condition].mean()),
+                "tactile_mean": float(paired[tactile_condition].mean()),
+                "mean_difference": float(np.mean(differences)),
+                "wilcoxon_statistic": statistic,
+                "p_value_raw": p_value_raw,
+            }
+
+            directed_rows.append(
                 {
-                    "analysis_profile": "published_style_exact_max_t_per_band_55",
-                    "band": band,
-                    "roi_source": roi_source,
-                    "roi_target": roi_target,
-                    "edge_scope": edge_scope,
-                    "subject_count": len(paired),
-                    "visual_mean": float(paired[visual_condition].mean()),
-                    "tactile_mean": float(paired[tactile_condition].mean()),
-                    "mean_difference": float(
-                        (paired[visual_condition] - paired[tactile_condition]).mean()
-                    ),
-                    "t_statistic": float(t_value),
-                    "p_value_t_raw": raw_p_value,
-                    "p_value_max_t": float(p_value),
-                    "significant": bool(p_value < 0.05),
-                    "correction_family_size": matrix.shape[1],
-                    "permutation_count": 1 << matrix.shape[0],
+                    **base,
+                    "roi_source": str(roi_source),
+                    "roi_target": str(roi_target),
                 }
             )
-    return rows
+
+            if edge_scope == "interregional":
+                directed_rows.append(
+                    {
+                        **base,
+                        "roi_source": str(roi_target),
+                        "roi_target": str(roi_source),
+                    }
+                )
+
+        if len(directed_rows) != 100:
+            raise ValueError(
+                f"Band {band!r} produced {len(directed_rows)} directed ROI rows; expected 100"
+            )
+
+        adjusted = holm_adjust(
+            np.asarray([row["p_value_raw"] for row in directed_rows], dtype=float)
+        )
+
+        for row, adjusted_p in zip(directed_rows, adjusted):
+            row["p_value_holm"] = float(adjusted_p)
+            row["significant"] = bool(adjusted_p < 0.05)
+            row["correction_family_size"] = 100
+
+        all_rows.extend(directed_rows)
+
+    return sorted(
+        all_rows,
+        key=lambda row: (
+            str(row["band"]),
+            float(row["p_value_holm"]),
+            str(row["roi_source"]),
+            str(row["roi_target"]),
+        ),
+    )
+
+
+def collapse_directed_brain_network_rows(
+    rows: Sequence[Mapping[str, object]],
+    *,
+    tolerance: float = 1e-12,
+) -> list[dict[str, object]]:
+    """Collapse symmetric ROI rows only after the 100-test Holm correction."""
+
+    roi_order = {roi: index for index, roi in enumerate(PAPER_ROI_CHANNELS)}
+    frame = pd.DataFrame(rows)
+
+    canonical_source = []
+    canonical_target = []
+
+    for source, target in zip(frame["roi_source"], frame["roi_target"]):
+        source = str(source)
+        target = str(target)
+        if roi_order[source] <= roi_order[target]:
+            canonical_source.append(source)
+            canonical_target.append(target)
+        else:
+            canonical_source.append(target)
+            canonical_target.append(source)
+
+    frame = frame.assign(
+        canonical_source=canonical_source,
+        canonical_target=canonical_target,
+    )
+
+    collapsed: list[dict[str, object]] = []
+
+    for (band, source, target), group in frame.groupby(
+        ["band", "canonical_source", "canonical_target"],
+        sort=True,
+    ):
+        for column in ("mean_difference", "p_value_raw", "p_value_holm"):
+            if column not in group.columns or group[column].isna().all():
+                continue
+            if float(group[column].max() - group[column].min()) > tolerance:
+                raise ValueError(
+                    f"Symmetric rows disagree for {band}/{source}/{target}/{column}"
+                )
+
+        first = group.iloc[0]
+        collapsed.append(
+            {
+                "analysis_profile": "wilcoxon_holm_per_band_directed_100",
+                "band": str(band),
+                "roi_source": str(source),
+                "roi_target": str(target),
+                "edge_scope": (
+                    "within_roi" if source == target else "interregional"
+                ),
+                "subject_count": int(first["subject_count"]),
+                "visual_mean": float(first.get("visual_mean", np.nan)),
+                "tactile_mean": float(first.get("tactile_mean", np.nan)),
+                "mean_difference": float(group["mean_difference"].mean()),
+                "wilcoxon_statistic": float(first.get("wilcoxon_statistic", np.nan)),
+                "p_value_raw": float(first.get("p_value_raw", np.nan)),
+                "p_value_holm": float(group["p_value_holm"].mean()),
+                "significant": bool(float(group["p_value_holm"].mean()) < 0.05),
+                "correction_family_size": 100,
+                "directed_rows_collapsed": int(len(group)),
+            }
+        )
+
+    return collapsed

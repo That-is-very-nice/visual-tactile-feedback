@@ -33,7 +33,8 @@ PAPER_BANDS_HZ: dict[str, tuple[float, float]] = {
 MIDLINE_CHANNELS = ("Fpz", "AFz", "Fz", "FCz", "Cz", "CPz", "Pz", "POz", "Oz")
 PAPER_NETWORK_METRIC = "absolute_imaginary_coherence"
 PAPER_NETWORK_METRIC_DEFINITION = (
-    "mean absolute imaginary coherence across unique electrode pairs belonging to an ROI pair"
+    "mean across unique ROI electrode pairs of the absolute value of band-averaged "
+    "imaginary coherence"
 )
 
 
@@ -83,11 +84,11 @@ def build_roi_channel_edges(
     *,
     include_within_roi: bool = True,
 ) -> list[RoiChannelEdge]:
-    """Build unique unordered channel pairs for every ROI pair.
+    """Build unique unordered channel pairs for ROI-level connectivity.
 
-    Historical notebooks evaluated both directions of an undirected |ImCoh| edge.
-    The absolute values are identical, so this implementation stores each channel
-    pair exactly once. Within-ROI pairs exclude self-connections.
+    Absolute imaginary coherence is represented once for each unique channel pair.
+    Within-ROI channel pairs exclude channel self-connections. Directed ROI rows
+    required by the statistical correction are generated later at the ROI level.
     """
 
     validate_roi_map(roi_channels)

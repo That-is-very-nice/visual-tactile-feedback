@@ -139,8 +139,7 @@ def plot_difference_matrices(
         ax.set_xticks(range(len(labels)), labels=labels, rotation=90, fontsize=6)
     if last is not None:
         fig.colorbar(last, ax=axes, fraction=0.018, pad=0.02, label="Visual − tactile")
-    correction_label = "exact max-T" if p_column == "p_value_max_t" else "Holm"
     fig.suptitle(
-        f"ROI connectivity differences; black outline = {correction_label} p < .05"
+        "ROI connectivity differences; black outline = Holm-adjusted Wilcoxon p < .05"
     )
     _save(fig, output_paths)
