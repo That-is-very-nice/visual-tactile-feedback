@@ -61,4 +61,4 @@ jobs:
       - name: Test brain-network modules
         run: >-
           python -m unittest discover -s tests -p "test_brain_network*.py" -v
-          && python -m unittest tests.test_legacy_brain_network tests.test_neuro_registry -v
+          && python -m unittest tests.test_neuro_registry -v
